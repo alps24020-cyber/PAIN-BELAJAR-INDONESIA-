@@ -1,0 +1,293 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ALPS Ultimate - Sistem Sekolah Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+        
+        :root { --primary: #4f46e5; --secondary: #ec4899; --dark: #0f172a; --bg: #f8fafc; }
+        
+        * { -webkit-tap-highlight-color: transparent; font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; outline: none; }
+        body { background: var(--bg); margin: 0; padding: 0; height: 100vh; overflow: hidden; color: var(--dark); }
+
+        /* Smooth Animations */
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        
+        /* UI Components */
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.4); }
+        .glass-dark { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px); border-top: 1px solid rgba(255,255,255,0.1); }
+        
+        .tab-view { display: none; height: calc(100vh - 160px); overflow-y: auto; padding: 24px; padding-bottom: 120px; animation: slideUp 0.3s ease-out; }
+        .tab-view.active { display: block; }
+        
+        /* Navigation Dock */
+        .dock {
+            position: fixed; bottom: 20px; left: 20px; right: 20px; height: 75px;
+            border-radius: 24px; display: flex; z-index: 1000; padding: 6px;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+        }
+        .dock-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; border-radius: 18px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .dock-btn.active { color: white; background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+        
+        /* Interactive Elements */
+        .btn-press { transition: all 0.15s ease; cursor: pointer; }
+        .btn-press:active { transform: scale(0.95); opacity: 0.9; }
+        .card-hover { transition: all 0.2s ease; border: 2px solid transparent; }
+        .card-hover:active { border-color: var(--primary); background: #eff6ff; }
+        
+        /* Modals & Overlays */
+        .overlay { position: fixed; inset: 0; background: rgba(248, 250, 252, 0.98); backdrop-filter: blur(5px); z-index: 2000; display: none; flex-direction: column; animation: popIn 0.3s ease; }
+        
+        /* Toasts System */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { background: var(--dark); color: white; padding: 14px 24px; border-radius: 100px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: slideDown 0.3s forwards, fadeOut 0.3s 2.5s forwards; }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; margin-top: -50px; } }
+        
+        /* Chat Bubbles */
+        .msg-bubble { max-width: 82%; padding: 14px 18px; border-radius: 20px; font-size: 14px; font-weight: 600; line-height: 1.5; }
+        .msg-me { background: linear-gradient(135deg, var(--primary), #818cf8); color: white; border-bottom-right-radius: 4px; box-shadow: 0 8px 15px -3px rgba(79, 70, 229, 0.3); }
+        .msg-them { background: white; border: 1px solid #e2e8f0; color: #1e293b; border-bottom-left-radius: 4px; }
+        
+        ::-webkit-scrollbar { width: 0px; }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <!-- ================= LOGIN SCREEN ================= -->
+    <div id="login-screen" class="fixed inset-0 bg-white z-[3000] flex flex-col items-center justify-center p-8">
+        <!-- Background Decoration -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[120px] opacity-20"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-pink-500 rounded-full blur-[120px] opacity-20"></div>
+        
+        <div class="relative z-10 w-full max-w-sm">
+            <div class="w-24 h-24 bg-gradient-to-br from-indigo-600 to-pink-500 rounded-[2rem] mx-auto flex items-center justify-center text-white text-4xl shadow-2xl mb-8 transform -rotate-3">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="text-center mb-10">
+                <h1 class="text-5xl font-black tracking-tighter text-slate-900 mb-2">ALPS</h1>
+                <p class="text-indigo-600 font-bold text-[10px] uppercase tracking-[0.4em]">Ultimate Education</p>
+            </div>
+            
+            <div class="bg-slate-100 p-1.5 rounded-[1.5rem] mb-6 flex">
+                <button onclick="setRole('Siswa')" id="role-siswa" class="btn-press flex-1 py-4 rounded-[1.2rem] font-black text-xs bg-white text-indigo-600 shadow-sm transition-all">SISWA</button>
+                <button onclick="setRole('Guru')" id="role-guru" class="btn-press flex-1 py-4 rounded-[1.2rem] font-black text-xs text-slate-500 transition-all">GURU</button>
+            </div>
+            
+            <input type="text" id="input-nama" placeholder="Masukkan Nama Lengkap..." class="w-full p-6 bg-slate-50 border-2 border-transparent focus:border-indigo-500 focus:bg-white rounded-[1.5rem] font-bold text-center mb-6 transition-all text-slate-700 shadow-inner">
+            
+            <button onclick="prosesMasuk()" class="btn-press w-full py-6 bg-slate-900 text-white rounded-[1.5rem] font-black text-sm shadow-2xl">
+                MASUK APLIKASI <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= MAIN DASHBOARD ================= -->
+    <div id="main-app" class="hidden flex-col h-screen relative">
+        
+        <!-- Header -->
+        <header class="glass pt-14 pb-6 px-6 flex justify-between items-center sticky top-0 z-50">
+            <div class="flex items-center gap-4">
+                <div id="user-ava" class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-[1.5rem] flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-indigo-200">?</div>
+                <div>
+                    <h2 id="user-nama" class="font-black text-lg text-slate-800 leading-tight">Nama User</h2>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span id="user-role" class="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md uppercase tracking-widest">ROLE</span>
+                        <span id="badge-admin" class="hidden text-[8px] font-black text-white bg-rose-500 px-2 py-1 rounded-md uppercase">DEV</span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="location.reload()" class="btn-press w-12 h-12 bg-slate-50 rounded-2xl text-slate-400 border border-slate-100"><i class="fas fa-power-off"></i></button>
+        </header>
+
+        <!-- Container Konten -->
+        <main class="flex-1 relative">
+            
+            <!-- TAB: DISKUSI / GRUP -->
+            <div id="tab-grup" class="tab-view active">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <h3 class="text-3xl font-black text-slate-900">Ruang Kelas</h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Daftar Grup Diskusi</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="bukaModal('modal-gabung')" class="btn-press w-12 h-12 bg-white border border-slate-200 rounded-[1.2rem] text-slate-600 shadow-sm"><i class="fas fa-link"></i></button>
+                        <button onclick="bukaModal('modal-buat')" class="btn-press w-12 h-12 bg-indigo-600 text-white rounded-[1.2rem] shadow-lg shadow-indigo-200"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <div id="list-grup" class="space-y-4">
+                    <!-- Data Grup Akan Muncul Disini -->
+                </div>
+            </div>
+
+            <!-- TAB: ABSENSI -->
+            <div id="tab-absen" class="tab-view">
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2.5rem] p-8 text-center text-white mb-8 shadow-2xl relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500 rounded-full blur-[80px] opacity-50"></div>
+                    <h2 id="jam-digital" class="text-5xl font-black mb-8 tracking-tighter relative z-10">00:00</h2>
+                    <div class="grid grid-cols-2 gap-3 relative z-10">
+                        <button onclick="absen('HADIR', 'emerald')" class="btn-press py-5 bg-emerald-500 rounded-[1.2rem] font-black text-[11px] tracking-widest shadow-lg shadow-emerald-500/30">HADIR</button>
+                        <button onclick="absen('SAKIT', 'amber')" class="btn-press py-5 bg-amber-500 rounded-[1.2rem] font-black text-[11px] tracking-widest shadow-lg shadow-amber-500/30">SAKIT</button>
+                        <button onclick="absen('IZIN', 'blue')" class="btn-press py-5 bg-blue-500 rounded-[1.2rem] font-black text-[11px] tracking-widest shadow-lg shadow-blue-500/30">IZIN</button>
+                        <button onclick="absen('ALPA', 'rose')" class="btn-press py-5 bg-rose-600 rounded-[1.2rem] font-black text-[11px] tracking-widest shadow-lg shadow-rose-600/30">ALPA</button>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Riwayat Presensi</h4>
+                    <span class="text-[9px] font-bold bg-green-100 text-green-600 px-2 py-1 rounded-md">LIVE</span>
+                </div>
+                <div id="list-absen" class="space-y-3"></div>
+            </div>
+
+            <!-- TAB: WARGA & PENCARIAN -->
+            <div id="tab-warga" class="tab-view">
+                <h3 class="text-3xl font-black text-slate-900 mb-6">Warga Sekolah</h3>
+                <div class="relative mb-8">
+                    <i class="fas fa-search absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                    <input type="text" id="cari-warga" oninput="renderWarga()" placeholder="Cari nama..." class="w-full p-6 pl-14 bg-white border border-slate-100 rounded-[1.5rem] outline-none font-bold shadow-sm">
+                </div>
+                <div id="list-warga" class="space-y-3"></div>
+            </div>
+
+            <!-- TAB: PLAYGROUND (GAME KUIS) -->
+            <div id="tab-game" class="tab-view">
+                <div class="bg-indigo-600 rounded-[2.5rem] p-10 text-center text-white mb-6 shadow-2xl shadow-indigo-300">
+                    <i class="fas fa-brain text-5xl mb-6 text-indigo-200"></i>
+                    <h3 class="text-2xl font-black mb-2">Asah Otak</h3>
+                    <p class="text-xs font-medium text-indigo-200 mb-8">Jawab kuis dengan cepat dan tepat untuk mendapatkan skor tertinggi!</p>
+                    <button onclick="mulaiKuis()" class="btn-press w-full py-5 bg-white text-indigo-600 rounded-[1.2rem] font-black shadow-xl">MULAI BERMAIN SEKARANG</button>
+                </div>
+                <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4"><i class="fas fa-trophy text-amber-500 mr-2"></i> Papan Skor</h4>
+                    <div id="list-skor" class="space-y-3">
+                        <div class="text-center py-6 text-slate-300 font-bold text-xs">Belum ada skor yang tercatat.</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Dock Bottom Nav -->
+        <nav class="dock glass-dark">
+            <button onclick="navigasi('grup')" id="nav-grup" class="dock-btn active"><i class="fas fa-layer-group text-xl mb-1"></i><span class="text-[8px] font-black">KELAS</span></button>
+            <button onclick="navigasi('absen')" id="nav-absen" class="dock-btn"><i class="fas fa-fingerprint text-xl mb-1"></i><span class="text-[8px] font-black">ABSEN</span></button>
+            <button onclick="navigasi('warga')" id="nav-warga" class="dock-btn"><i class="fas fa-users text-xl mb-1"></i><span class="text-[8px] font-black">WARGA</span></button>
+            <button onclick="navigasi('game')" id="nav-game" class="dock-btn"><i class="fas fa-gamepad text-xl mb-1"></i><span class="text-[8px] font-black">GAME</span></button>
+        </nav>
+    </div>
+
+    <!-- ================= MODALS & OVERLAYS ================= -->
+    
+    <!-- MODAL BUAT GRUP -->
+    <div id="modal-buat" class="overlay p-8">
+        <div class="flex justify-between items-center mb-12 mt-4">
+            <h3 class="text-3xl font-black text-slate-900">Buat Kelas</h3>
+            <button onclick="tutupModal('modal-buat')" class="btn-press w-12 h-12 bg-white rounded-2xl shadow-sm border border-slate-100"><i class="fas fa-times"></i></button>
+        </div>
+        <input type="text" id="in-nama-grup" placeholder="Contoh: Matematika X-A" class="w-full p-6 bg-white border-2 border-slate-100 focus:border-indigo-500 rounded-[1.5rem] font-bold text-lg mb-8 shadow-sm">
+        <button onclick="simpanGrupBaru()" class="btn-press w-full py-6 bg-indigo-600 text-white rounded-[1.5rem] font-black shadow-xl shadow-indigo-200 text-sm">SIMPAN KELAS</button>
+    </div>
+
+    <!-- MODAL GABUNG GRUP -->
+    <div id="modal-gabung" class="overlay p-8">
+        <div class="flex justify-between items-center mb-12 mt-4">
+            <h3 class="text-3xl font-black text-slate-900">Gabung Link</h3>
+            <button onclick="tutupModal('modal-gabung')" class="btn-press w-12 h-12 bg-white rounded-2xl shadow-sm border border-slate-100"><i class="fas fa-times"></i></button>
+        </div>
+        <p class="text-sm font-bold text-slate-500 mb-4 text-center">Masukkan 6-Digit Kode Kelas</p>
+        <input type="text" id="in-kode-grup" placeholder="CTH: AB12XY" class="w-full p-6 bg-white border-2 border-slate-100 focus:border-indigo-500 rounded-[1.5rem] font-black text-4xl text-center uppercase tracking-[0.2em] mb-8 shadow-sm">
+        <button onclick="prosesGabung()" class="btn-press w-full py-6 bg-slate-900 text-white rounded-[1.5rem] font-black shadow-xl text-sm">GABUNG SEKARANG</button>
+    </div>
+
+    <!-- MODAL CHAT ROOM -->
+    <div id="modal-chat" class="overlay">
+        <header class="glass pt-14 pb-5 px-6 flex items-center gap-4 z-10 shadow-sm">
+            <button onclick="tutupModal('modal-chat')" class="btn-press w-12 h-12 bg-white rounded-[1.2rem] shadow-sm border border-slate-100 text-slate-500"><i class="fas fa-chevron-left"></i></button>
+            <div class="flex-1 overflow-hidden">
+                <h4 id="chat-nama" class="font-black text-lg text-slate-900 truncate">Nama Kelas</h4>
+                <p id="chat-kode" class="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-0.5">KODE: XXX</p>
+            </div>
+            <button onclick="salinKodeGrup()" class="btn-press w-12 h-12 bg-indigo-50 text-indigo-600 rounded-[1.2rem]"><i class="fas fa-copy"></i></button>
+        </header>
+        
+        <div id="chat-area" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4 bg-slate-50 pb-32">
+            <!-- Pesan Chat Disini -->
+        </div>
+        
+        <div class="absolute bottom-0 left-0 right-0 p-5 bg-white border-t border-slate-100 flex gap-3 z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+            <input type="text" id="in-pesan" placeholder="Ketik pesan disini..." class="flex-1 p-5 bg-slate-100 rounded-[1.5rem] font-bold text-sm outline-none border-2 border-transparent focus:border-indigo-200 focus:bg-white transition-all">
+            <button onclick="kirimPesan()" class="btn-press w-16 h-auto bg-indigo-600 text-white rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-indigo-200 text-lg"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- MODAL GAME QUIZ -->
+    <div id="modal-game" class="overlay bg-slate-900 text-white items-center justify-center p-8">
+        <div id="game-countdown" class="text-center">
+            <h1 id="count-angka" class="text-[120px] font-black text-indigo-500 animate-pulse">3</h1>
+            <p class="text-[14px] font-black tracking-[0.5em] text-white uppercase mt-4">Bersiap!</p>
+        </div>
+        
+        <div id="game-soal" class="hidden w-full max-w-md">
+            <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
+                <span class="text-[10px] font-black bg-indigo-600 px-3 py-1.5 rounded-lg tracking-widest">SOAL KUIS</span>
+                <span class="text-rose-500 font-black"><i class="fas fa-clock mr-1"></i> <span id="timer-soal">10</span>s</span>
+            </div>
+            <h2 id="teks-soal" class="text-2xl font-bold leading-relaxed mb-10 text-center">...</h2>
+            <div id="opsi-soal" class="space-y-4">
+                <!-- Opsi Jawaban -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SCRIPT & LOGIKA APLIKASI ================= -->
+    <script>
+        // --- 1. STATE & DATABASE ENGINE (100% WORKS TANPA FIREBASE) ---
+        let me = { nama: '', role: 'Siswa', isDev: false };
+        let activeRoomId = null;
+        
+        // Inisialisasi Database Bawaan (Local Storage Engine)
+        let db = {
+            users: [],
+            groups: [
+                { id: 'g_publik', nama: 'Mading Sekolah (Global)', kode: 'GLOBAL', admin: 'Sistem' }
+            ],
+            chats: {
+                'g_publik': [{ pengirim: 'Sistem', teks: 'Selamat datang di ALPS v55! Gunakan bahasa yang sopan.', waktu: '00:00' }]
+            },
+            absen: []
+        };
+
+        // Fungsi Load/Save agar data tidak hilang saat direfresh
+        function loadDatabase() {
+            const saved = localStorage.getItem('alps_db_v55_ultimate');
+            if(saved) db = JSON.parse(saved);
+        }
+        function saveDatabase() {
+            localStorage.setItem('alps_db_v55_ultimate', JSON.stringify(db));
+            renderUI(); // Render ulang tiap ada perubahan
+        }
+
+        // --- 2. SISTEM TOAST (NOTIFIKASI VISUAL) ---
+        function toast(msg, icon = 'check-circle', color = 'emerald') {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = `toast border-l-[6px] border-${color}-500`;
+            el.innerHTML = `<i class="fas fa-${icon} text-${color}-400 text-lg"></i> ${msg}`;
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 2800);
+        }
+
+        // --- 3. FUNGSI OTENTIKASI (LOGIN) ---
+        function setRole(role) {
+            me.role = role;
+            document.getElementById('role-siswa').className = role === 'Siswa' ? 'btn-press flex-1 py-4 rounded-[1.2rem] font-black text-xs bg-slate-900 text-white shadow-sm transition-all' : 'btn-press flex-1 py-4 rounded-[1.2rem] font-black text-xs text-slate-400 bg-transparent transition-all';
+            document.getElementById('role-guru').c
